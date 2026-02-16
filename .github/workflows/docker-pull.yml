@@ -15,8 +15,8 @@ on:
         description: '运行时长(小时)'
         required: true
         default: '1'
-  # schedule:
-  #   - cron: '0 */6 * * *'  # 每6小时运行一次
+  schedule:
+    - cron: '0 */6 * * *'  # 每6小时运行一次
 
 jobs:
   pull-images:
