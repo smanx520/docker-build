@@ -31,7 +31,7 @@ jobs:
 
       - name: Pull Docker Images
         run: |
-          # 设置默认值（schedule 触发时 inputs 为空，并确保是整数）
+          # 设置默认值（schedule 触发时 inputs 为���）
           DOCKER_IMAGES="${{ inputs.docker_images }}"
           PULL_SLEEP_TIME="${{ inputs.pull_sleep_time }}"
           TIMEOUT_HOURS="${{ inputs.timeout_hours }}"
@@ -41,18 +41,14 @@ jobs:
           # [ -z "$PULL_SLEEP_TIME" ] && PULL_SLEEP_TIME=60
           # [ -z "$TIMEOUT_HOURS" ] && TIMEOUT_HOURS=1
 
-          # 转换为整数（去掉小数部分）
-          TIMEOUT_HOURS=${TIMEOUT_HOURS%.*}
-          PULL_SLEEP_TIME=${PULL_SLEEP_TIME%.*}
-          [ -z "$TIMEOUT_HOURS" ] && TIMEOUT_HOURS=1
-          [ -z "$PULL_SLEEP_TIME" ] && PULL_SLEEP_TIME=60
+          # 支持小数值，转换为秒（使用 bc 进行浮点运算）
+          timeout=$(echo "$TIMEOUT_HOURS * 3600" | bc | cut -d. -f1)
 
           # 将逗号分隔的镜像列表转换为换行分隔
           echo "$DOCKER_IMAGES" | tr ',' '\n' | tr -d '\r' > images.txt
 
           # 记录开始时间
           start_time=$(date +%s)
-          timeout=$((TIMEOUT_HOURS * 3600))
 
           round=1
           while true; do
@@ -89,9 +85,8 @@ jobs:
             done < images.txt
 
             # 休眠随机时长 (PULLSLEEPTIME/2 到 PULLSLEEPTIME*1.5)
-            sleeptime=$PULL_SLEEP_TIME
-            min_sleep=$((sleeptime / 2))
-            max_sleep=$((sleeptime + sleeptime / 2))
+            min_sleep=$(echo "$PULL_SLEEP_TIME / 2" | bc | cut -d. -f1)
+            max_sleep=$(echo "$PULL_SLEEP_TIME * 1.5" | bc | cut -d. -f1)
             random_sleep=$((min_sleep + RANDOM % (max_sleep - min_sleep + 1)))
             echo "随机休眠 $random_sleep 秒后开始下一轮..."
             sleep $random_sleep
