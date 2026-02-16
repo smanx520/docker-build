@@ -37,9 +37,9 @@ jobs:
           TIMEOUT_HOURS="${{ inputs.timeout_hours }}"
 
           # 设置默认值
-          # [ -z "$DOCKER_IMAGES" ] && DOCKER_IMAGES="smanx/docker-qq,smanx/docker-wechat,smanx/docker-v2rayn,smanx/docker-coremark,smanx/openclaw,smanx/nanobot"
-          # [ -z "$PULL_SLEEP_TIME" ] && PULL_SLEEP_TIME=60
-          # [ -z "$TIMEOUT_HOURS" ] && TIMEOUT_HOURS=1
+          [ -z "$DOCKER_IMAGES" ] && DOCKER_IMAGES="${{ vars.DOCKER_IMAGES_PULL }}"
+          [ -z "$PULL_SLEEP_TIME" ] && PULL_SLEEP_TIME=60
+          [ -z "$TIMEOUT_HOURS" ] && TIMEOUT_HOURS=5
 
           # 支持小数值，转换为秒（使用 bc 进行浮点运算）
           timeout=$(echo "$TIMEOUT_HOURS * 3600" | bc | cut -d. -f1)
