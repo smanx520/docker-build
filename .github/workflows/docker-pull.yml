@@ -14,7 +14,7 @@ on:
       timeout_hours:
         description: '运行时长(小时)'
         required: true
-        default: '1'
+        default: '5'
   schedule:
     - cron: '0 */6 * * *'  # 每6小时运行一次
 
