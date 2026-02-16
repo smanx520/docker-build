@@ -4,13 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       docker_images:
-        description: 'Docker镜像列表(逗号分��)'
+        description: 'Docker镜像列表(逗号分隔)'
         required: false
         default: 'node,python'
-      pull_sleep_time:
-        description: '休眠基准时间(秒)'
-        required: true
-        default: '60'
   schedule:
     - cron: '0 */6 * * *'  # 每6小时运行一次
 
@@ -29,11 +25,9 @@ jobs:
         run: |
           # 设置默认值（schedule 触发时 inputs 为空）
           DOCKER_IMAGES="${{ inputs.docker_images }}"
-          PULL_SLEEP_TIME="${{ inputs.pull_sleep_time }}"
 
           # 设置默认值
           [ -z "$DOCKER_IMAGES" ] && DOCKER_IMAGES="${{ vars.DOCKER_IMAGES_PULL }}"
-          [ -z "$PULL_SLEEP_TIME" ] && PULL_SLEEP_TIME=60
 
           # 将逗号分隔的镜像列表转换为换行分隔
           echo "$DOCKER_IMAGES" | tr ',' '\n' | tr -d '\r' > images.txt
@@ -41,14 +35,29 @@ jobs:
           # 统计镜像数量
           image_count=$(wc -l < images.txt)
           max_inspect=100
+          interval=216  # 3.6分钟 = 216秒
+          max_runtime=21300  # 5小时55分 = 21300秒
 
           echo "镜像列表: $DOCKER_IMAGES"
           echo "镜像数量: $image_count"
           echo "最大执行次数: $max_inspect"
+          echo "调用间隔: ${interval}秒 (3.6分钟)"
+          echo "最大运行时长: ${max_runtime}秒 (5小时55分)"
+
+          # 记录开始时间
+          start_time=$(date +%s)
 
           inspect_count=0
           round=1
           while [ $inspect_count -lt $max_inspect ]; do
+            # 检查运行时长
+            current_time=$(date +%s)
+            elapsed=$((current_time - start_time))
+            if [ $elapsed -ge $max_runtime ]; then
+              echo "已运行超过 5 小时 55 分钟，退出"
+              exit 0
+            fi
+
             echo "=== 第 $round 轮 ==="
 
             # 读取文件并处理每一行
@@ -65,14 +74,11 @@ jobs:
                 echo "已达到最大执行次数 $max_inspect，退出"
                 exit 0
               fi
-            done < images.txt
 
-            # 休眠随机时长 (PULLSLEEPTIME/2 到 PULLSLEEPTIME*1.5)
-            min_sleep=$(echo "$PULL_SLEEP_TIME / 2" | bc | cut -d. -f1)
-            max_sleep=$(echo "$PULL_SLEEP_TIME * 1.5" | bc | cut -d. -f1)
-            random_sleep=$((min_sleep + RANDOM % (max_sleep - min_sleep + 1)))
-            echo "随机休眠 $random_sleep 秒后开始下一轮..."
-            sleep $random_sleep
+              # 每次调用后休眠 3.6 分钟
+              echo "休眠 ${interval} 秒后继续..."
+              sleep $interval
+            done < images.txt
 
             round=$((round + 1))
           done
