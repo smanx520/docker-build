@@ -72,8 +72,8 @@ jobs:
                 continue
               fi
 
-              echo "Pulling: $image_name"
-              docker pull "$image_name"
+              echo "Inspecting: $image_name"
+              docker manifest inspect "$image_name"
 
               # 检查时间
               current_time=$(date +%s)
