@@ -88,7 +88,11 @@ jobs:
             min_sleep=$(echo "$PULL_SLEEP_TIME / 2" | bc | cut -d. -f1)
             max_sleep=$(echo "$PULL_SLEEP_TIME * 1.5" | bc | cut -d. -f1)
             random_sleep=$((min_sleep + RANDOM % (max_sleep - min_sleep + 1)))
-            echo "随机休眠 $random_sleep 秒后开始下一轮..."
+            # 计算当前进度
+            current_time=$(date +%s)
+            elapsed=$((current_time - start_time))
+            percent=$((elapsed * 100 / timeout))
+            echo "已运行时间: $elapsed 秒 / $timeout 秒 ($percent%)，随机休眠 $random_sleep 秒后开始下一轮..."
             sleep $random_sleep
 
             round=$((round + 1))
