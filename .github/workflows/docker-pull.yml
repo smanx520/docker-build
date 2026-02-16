@@ -6,7 +6,7 @@ on:
       docker_images:
         description: 'Docker镜像列表(逗号分隔)'
         required: true
-        default: 'smanx/docker-qq,smanx/docker-wechat,smanx/docker-v2rayn,smanx/docker-coremark,smanx/openclaw,smanx/nanobot'
+        default: 'node,python'
       pull_sleep_time:
         description: '休眠基准时间(秒)'
         required: true
