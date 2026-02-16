@@ -4,17 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       docker_images:
-        description: 'Docker镜像列表(逗号分隔)'
+        description: 'Docker镜像列表(逗号分��)'
         required: false
         default: 'node,python'
       pull_sleep_time:
         description: '休眠基准时间(秒)'
         required: true
         default: '60'
-      timeout_hours:
-        description: '运行时长(小时)'
-        required: true
-        default: '5'
   schedule:
     - cron: '0 */6 * * *'  # 每6小时运行一次
 
@@ -31,40 +27,29 @@ jobs:
 
       - name: Pull Docker Images
         run: |
-          # 设置默认值（schedule 触发时 inputs 为���）
+          # 设置默认值（schedule 触发时 inputs 为空）
           DOCKER_IMAGES="${{ inputs.docker_images }}"
           PULL_SLEEP_TIME="${{ inputs.pull_sleep_time }}"
-          TIMEOUT_HOURS="${{ inputs.timeout_hours }}"
 
           # 设置默认值
           [ -z "$DOCKER_IMAGES" ] && DOCKER_IMAGES="${{ vars.DOCKER_IMAGES_PULL }}"
           [ -z "$PULL_SLEEP_TIME" ] && PULL_SLEEP_TIME=60
-          [ -z "$TIMEOUT_HOURS" ] && TIMEOUT_HOURS=5
-
-          # 支持小数值，转换为秒（使用 bc 进行浮点运算）
-          timeout=$(echo "$TIMEOUT_HOURS * 3600" | bc | cut -d. -f1)
 
           # 将逗号分隔的镜像列表转换为换行分隔
           echo "$DOCKER_IMAGES" | tr ',' '\n' | tr -d '\r' > images.txt
 
-          # 记录开始时间
-          start_time=$(date +%s)
+          # 统计镜像数量
+          image_count=$(wc -l < images.txt)
+          max_inspect=100
 
+          echo "镜像列表: $DOCKER_IMAGES"
+          echo "镜像数量: $image_count"
+          echo "最大执行次数: $max_inspect"
+
+          inspect_count=0
           round=1
-          while true; do
-            current_time=$(date +%s)
-            elapsed=$((current_time - start_time))
-
-            # 检查是否超时
-            if [ "$elapsed" -ge "$timeout" ]; then
-              echo "已运行${TIMEOUT_HOURS}小时，强制退出"
-              exit 0
-            fi
-
-            echo "=== 第 $round 轮拉取 ==="
-            # 计算百分比
-            percent=$((elapsed * 100 / timeout))
-            echo "已运行时间: $elapsed 秒 / $timeout 秒 ($percent%)"
+          while [ $inspect_count -lt $max_inspect ]; do
+            echo "=== 第 $round 轮 ==="
 
             # 读取文件并处理每一行
             while IFS= read -r image_name || [ -n "$image_name" ]; do
@@ -72,14 +57,12 @@ jobs:
                 continue
               fi
 
-              echo "Inspecting: $image_name"
+              inspect_count=$((inspect_count + 1))
+              echo "[$inspect_count/$max_inspect] Inspecting: $image_name"
               docker manifest inspect "$image_name"
 
-              # 检查时间
-              current_time=$(date +%s)
-              elapsed=$((current_time - start_time))
-              if [ "$elapsed" -ge "$timeout" ]; then
-                echo "已运行${TIMEOUT_HOURS}小时，强制退出"
+              if [ $inspect_count -ge $max_inspect ]; then
+                echo "已达到最大执行次数 $max_inspect，退出"
                 exit 0
               fi
             done < images.txt
@@ -88,12 +71,8 @@ jobs:
             min_sleep=$(echo "$PULL_SLEEP_TIME / 2" | bc | cut -d. -f1)
             max_sleep=$(echo "$PULL_SLEEP_TIME * 1.5" | bc | cut -d. -f1)
             random_sleep=$((min_sleep + RANDOM % (max_sleep - min_sleep + 1)))
-            # 计算当前进度
-            current_time=$(date +%s)
-            elapsed=$((current_time - start_time))
-            percent=$((elapsed * 100 / timeout))
-            echo "已运行时间: $elapsed 秒 / $timeout 秒 ($percent%)，随机休眠 $random_sleep 秒后开始下一轮..."
+            echo "随机休眠 $random_sleep 秒后开始下一轮..."
             sleep $random_sleep
 
             round=$((round + 1))
-          done 
+          done
