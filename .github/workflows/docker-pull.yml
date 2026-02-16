@@ -31,10 +31,21 @@ jobs:
 
       - name: Pull Docker Images
         run: |
-          # 设置默认值（schedule 触发时 inputs 为空）
-          DOCKER_IMAGES="${{ inputs.docker_images || 'smanx/docker-qq,smanx/docker-wechat,smanx/docker-v2rayn,smanx/docker-coremark,smanx/openclaw,smanx/nanobot' }}"
-          PULL_SLEEP_TIME="${{ inputs.pull_sleep_time || 60 }}"
-          TIMEOUT_HOURS="${{ inputs.timeout_hours || 1 }}"
+          # 设置默认值（schedule 触发时 inputs 为空，并确保是整数）
+          DOCKER_IMAGES="${{ inputs.docker_images }}"
+          PULL_SLEEP_TIME="${{ inputs.pull_sleep_time }}"
+          TIMEOUT_HOURS="${{ inputs.timeout_hours }}"
+
+          # 设置默认值
+          # [ -z "$DOCKER_IMAGES" ] && DOCKER_IMAGES="smanx/docker-qq,smanx/docker-wechat,smanx/docker-v2rayn,smanx/docker-coremark,smanx/openclaw,smanx/nanobot"
+          # [ -z "$PULL_SLEEP_TIME" ] && PULL_SLEEP_TIME=60
+          # [ -z "$TIMEOUT_HOURS" ] && TIMEOUT_HOURS=1
+
+          # 转换为整数（去掉小数部分）
+          TIMEOUT_HOURS=${TIMEOUT_HOURS%.*}
+          PULL_SLEEP_TIME=${PULL_SLEEP_TIME%.*}
+          [ -z "$TIMEOUT_HOURS" ] && TIMEOUT_HOURS=1
+          [ -z "$PULL_SLEEP_TIME" ] && PULL_SLEEP_TIME=60
 
           # 将逗号分隔的镜像列表转换为换行分隔
           echo "$DOCKER_IMAGES" | tr ',' '\n' | tr -d '\r' > images.txt
