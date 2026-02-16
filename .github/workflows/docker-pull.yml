@@ -55,7 +55,9 @@ jobs:
             fi
 
             echo "=== 第 $round 轮拉取 ==="
-            echo "已运行时间: $elapsed 秒"
+            # 计算百分比
+            percent=$((elapsed * 100 / timeout))
+            echo "已运行时间: $elapsed 秒 / $timeout 秒 ($percent%)"
 
             # 读取文件并处理每一行
             while IFS= read -r image_name || [ -n "$image_name" ]; do
