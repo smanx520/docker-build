@@ -34,7 +34,7 @@ jobs:
 
           # 统计镜像数量
           image_count=$(wc -l < images.txt)
-          max_inspect=100
+          max_inspect=80
           interval=216  # 3.6分钟 = 216秒
           max_runtime=21300  # 5小时55分 = 21300秒
 
