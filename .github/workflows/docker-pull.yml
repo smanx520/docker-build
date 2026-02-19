@@ -34,14 +34,12 @@ jobs:
 
           # 统计镜像数量
           image_count=$(wc -l < images.txt)
-          max_inspect=80
-          interval=216  # 3.6分钟 = 216秒
+          interval=360  # 6分钟 = 360秒，确保1小时运行10次
           max_runtime=21300  # 5小时55分 = 21300秒
 
           echo "镜像列表: $DOCKER_IMAGES"
           echo "镜像数量: $image_count"
-          echo "最大执行次数: $max_inspect"
-          echo "调用间隔: ${interval}秒 (3.6分钟)"
+          echo "调用间隔: ${interval}秒 (6分钟)，即每小时10次"
           echo "最大运行时长: ${max_runtime}秒 (5小时55分)"
 
           # 记录开始时间
@@ -49,7 +47,7 @@ jobs:
 
           inspect_count=0
           round=1
-          while [ $inspect_count -lt $max_inspect ]; do
+          while true; do
             # 检查运行时长
             current_time=$(date +%s)
             elapsed=$((current_time - start_time))
@@ -67,15 +65,10 @@ jobs:
               fi
 
               inspect_count=$((inspect_count + 1))
-              echo "[$inspect_count/$max_inspect] Inspecting: $image_name"
+              echo "[$inspect_count] Inspecting: $image_name"
               docker manifest inspect "$image_name"
 
-              if [ $inspect_count -ge $max_inspect ]; then
-                echo "已达到最大执行次数 $max_inspect，退出"
-                exit 0
-              fi
-
-              # 每次调用后休眠 3.6 分钟
+              # 每次调用后休眠 6 分钟（确保1小时运行10次）
               echo "休眠 ${interval} 秒后继续..."
               sleep $interval
             done < images.txt
