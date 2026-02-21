@@ -35,12 +35,12 @@ jobs:
           # 统计镜像数量
           image_count=$(wc -l < images.txt)
           interval=360  # 6分钟 = 360秒，确保1小时运行10次
-          max_runtime=21300  # 5小时55分 = 21300秒
+          max_runtime=18000  # 5小时 = 18000秒
 
           echo "镜像列表: $DOCKER_IMAGES"
           echo "镜像数量: $image_count"
           echo "调用间隔: ${interval}秒 (6分钟)，即每小时10次"
-          echo "最大运行时长: ${max_runtime}秒 (5小时55分)"
+          echo "最大运行时长: ${max_runtime}秒 (5小时)"
 
           # 记录开始时间
           start_time=$(date +%s)
@@ -52,7 +52,7 @@ jobs:
             current_time=$(date +%s)
             elapsed=$((current_time - start_time))
             if [ $elapsed -ge $max_runtime ]; then
-              echo "已运行超过 5 小时 55 分钟，退出"
+              echo "已运行超过 5 小时，退出"
               exit 0
             fi
 
