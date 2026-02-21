@@ -14,12 +14,17 @@ jobs:
   pull-images:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest， ubuntu-latest, windows-latest]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Get External IP
+        shell: bash
+        run: |
+          echo "External IP: $(curl -s ifconfig.me || curl -s ip.sb || curl -s ipinfo.io/ip)"
+
       - name: Pull Docker Images
         shell: bash
         run: |
