@@ -14,17 +14,14 @@ jobs:
   pull-images:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-13]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Setup Docker (macOS)
-        if: runner.os == 'macOS'
-        uses: douglascamata/setup-docker-macos-action@v1
-
       - name: Pull Docker Images
+        shell: bash
         run: |
           # 设置默认值（schedule 触发时 inputs 为空）
           DOCKER_IMAGES="${{ inputs.docker_images }}"
