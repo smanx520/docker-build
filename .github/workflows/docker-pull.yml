@@ -12,7 +12,9 @@ on:
 
 jobs:
   pull-images:
-    runs-on: ubuntu-latest
+    # 或 windows-latest / macos-latest
+    # runs-on: ubuntu-latest / ubuntu-22.04 / ubuntu-22.04
+    runs-on: macos-latest
 
     steps:
       - name: Docker Login
